@@ -11,6 +11,7 @@
 
 
 import pandas as pd
+import numpy as np
 
 
 ###DEMOGRAPHICS
@@ -51,13 +52,14 @@ ph = pd.read_excel('/Users/amarais/Documents/abcd/abcd_data/ph_p_dhx.xlsx', head
 #roll_over : devhx_19a_p ; sit : devhx_19b_p ; walk : devhx_19c_p ; speak : devhx_19d_p
 dm = ph[ph['eventname'] == 'baseline_year_1_arm_1'][['src_subject_id', 'devhx_19a_p', 'devhx_19b_p', 'devhx_19c_p', 'devhx_19d_p']]
 
-# Drop children that did not complete the questions 
+# Drop children that did not complete the questions or miscompleted
+
 dm_var = ['devhx_19a_p', 'devhx_19b_p', 'devhx_19c_p', 'devhx_19d_p']
+dm[dm_var] = dm[dm_var].where(dm[dm_var] <= 72, np.nan) #
 dm = dm.dropna(subset=dm_var, how='all')
 dm_id = dm['src_subject_id'].unique()
 demo = demo[demo['src_subject_id'].isin(dm_id)]
 
-#add to my data
 demo_dm = demo.merge(dm, on='src_subject_id', how='inner')
 
 print('END processing physical health data')
@@ -99,7 +101,7 @@ tbi_subjects = otbi_filtered.groupby('src_subject_id').apply(
         (group.loc[group['eventname'] != 'baseline_year_1_arm_1', tbi_columns].sum().sum() == 0)   # No other one elsewhere
     )
 )
-#Filter
+
 tbi_index = tbi_subjects[tbi_subjects].index  
 mtbi_control = otbi_filtered[~otbi_filtered['src_subject_id'].isin(tbi_index)]
 control = pd.DataFrame({'src_subject_id': mtbi_control['src_subject_id'].unique(), 'eventname':'baseline_year_1_arm_1', 'tbi_group':0, 'tbi_severity':0})
@@ -160,17 +162,13 @@ def sort_multiple_yes(row):
 
     return "valid"  # Aucune anomalie
 
-# Appliquer la fonction sur les sujets avec plusieurs "oui"
 analysis_results = multiple_yes.apply(sort_multiple_yes, axis=1)
 
-# Séparer les sujets à exclure et ceux avec des doublons
 to_drop = analysis_results[analysis_results == "inconsistent"].index
 duplicates = analysis_results[analysis_results == "duplicate"].index
 
-# Filtrer les sujets exclus
 mtbi = mtbi.drop(to_drop)
 
-# Afficher les résultats
 print(f"Subjects dropped due to inconsistent responses: {len(to_drop)}")
 print(f"Subjects with duplicated responses: {len(duplicates)}")
 
@@ -182,22 +180,16 @@ print('END processing TBI data')
 
 ##Export useful data
 def extract_data(row):
-    ## CAUSE
-    # Trouver les colonnes où il y a un 1
     columns_with_1 = [col for col in tbi_columns if row[col] == 1]
     
-    # Extraire le suffixe des colonnes et récupérer le max (si applicable)
     if columns_with_1:
         cause = max(int(col.split('_')[1]) for col in columns_with_1)
     else:
         cause = 'NaN'
 
-    ## SEVERITY
-    # Construire les noms de colonnes pour b et c
     b_col = f"tbi_{cause}b"  # Correction de la syntaxe pour récupérer b
     c_col = f"tbi_{cause}c"  # Correction de la syntaxe pour récupérer c
 
-    # Déterminer la sévérité 
     if row[b_col] == 0 and row[c_col] == 0:
         severity = 'NaN'
     elif row[b_col] == 1 and row[c_col] == 0:
@@ -207,14 +199,12 @@ def extract_data(row):
     elif row[b_col] == 1 and row[c_col] == 1:
         severity = 3 #Lost conciousness + memory
     else:
-        severity = 'NaN'  # Cas théoriquement impossible
+        severity = 'NaN'  
 
-    ## AGE
     age = row[age_columns].dropna()
     age_value = age.iloc[0] if not age.empty else None
 
-    return cause, severity, age_value  # Retourner les valeurs extraites
-
+    return cause, severity, age_value  
 
 
 mtbi_data = pd.DataFrame({
@@ -223,7 +213,8 @@ mtbi_data = pd.DataFrame({
     'tbi_group': 1,
     'tbi_cause': mtbi.apply(lambda row: extract_data(row)[0], axis=1),
     'tbi_severity': mtbi.apply(lambda row: extract_data(row)[1], axis=1),
-    'tbi_age': mtbi.apply(lambda row: extract_data(row)[2] *12, axis=1)
+    'tbi_age': mtbi.apply(lambda row: extract_data(row)[2] *12, axis=1),
+    'tbi_age_y': mtbi.apply(lambda row: extract_data(row)[2], axis=1)
 })
 
 mtbi_data.to_excel('/Users/amarais/Documents/abcd/data/mtbi_r.xlsx')
@@ -289,10 +280,8 @@ def assign_group(row):
     elif row['tbi_group'] == 1 and row['dd_group'] == 1:
         return 3, 'paired'
     else:
-        return 'NaN'  # Cas théoriquement impossible
+        return 'NaN'  
 
-# Application de la fonction sur chaque ligne
-# Appliquer la fonction et extraire les deux valeurs
 demo_dm_otbi[['group', 'group_nom']] = demo_dm_otbi.apply(
     lambda row: pd.Series(assign_group(row)), axis=1
 )
@@ -305,7 +294,7 @@ demo_dm_otbi[['group', 'group_nom']] = demo_dm_otbi.apply(
 new_rows = []
 
 for index, row in demo_dm_otbi.iterrows():
-    # Créer deux nouvelles lignes avec eventname modifié
+
     new_row_1 = row.copy()
     new_row_1['eventname'] = '2_year_follow_up_y_arm_1'
     new_rows.append(new_row_1)
@@ -316,21 +305,54 @@ for index, row in demo_dm_otbi.iterrows():
 
 
 new_rows_df = pd.DataFrame(new_rows)
-final_sample = pd.concat([demo_dm_otbi, new_rows_df], ignore_index=True)
-final_sample = final_sample.sort_values(by='src_subject_id').reset_index(drop=True)
+abcd_sample = pd.concat([demo_dm_otbi, new_rows_df], ignore_index=True)
+abcd_sample = abcd_sample.sort_values(by='src_subject_id').reset_index(drop=True)
 
 ##Add longitudinal data (age at follow-ups)
 
 longitudinal = pd.read_excel('/Users/amarais/Documents/abcd/abcd_data/abcd_y_lt.xlsx', header=0)
 
-final_sample = final_sample.merge(
+abcd_sample = abcd_sample.merge(
     longitudinal[['src_subject_id', 'eventname', 'interview_age']], 
     on=['src_subject_id', 'eventname'], 
     how='left'
 )
 
 
-print(final_sample)
+####---------------CBCL---------------
+
+print("Adding CBCL")
+
+cbcl = pd.read_excel('/Users/amarais/Documents/abcd/abcd_data/mh_p_cbcl.xlsx', header=0)
+abcd_sample = abcd_sample.merge(cbcl[['src_subject_id', 'eventname','cbcl_scr_dsm5_adhd_t','cbcl_scr_dsm5_anxdisord_t','cbcl_scr_dsm5_conduct_t','cbcl_scr_dsm5_depress_t','cbcl_scr_dsm5_opposit_t','cbcl_scr_syn_external_t','cbcl_scr_syn_internal_t']], on=['src_subject_id', 'eventname'], how='left')
+print(abcd_sample)
+
+###------------------END CBCL-----------
+
+
+###------------------Final sample
+
+final_sample = abcd_sample[abcd_sample.groupby('src_subject_id')['src_subject_id'].transform('count') > 1]
+
+final_sample['age0'] = final_sample['interview_age'] - final_sample['interview_age'].min()
+final_sample['demo_sex_v2'] = final_sample['demo_sex_v2'] - 1
+final_sample['age_from_tbi'] = final_sample['demo_brthdat_v2'] - final_sample['tbi_age']/12
+
+map_event = {
+    "baseline_year_1_arm_1": 0,
+    "2_year_follow_up_y_arm_1": 1,
+    "4_year_follow_up_y_arm_1": 2
+}
+final_sample['event0'] = final_sample['eventname'].map(map_event)
 
 final_sample.to_excel('/Users/amarais/Documents/abcd/data/final_sample.xlsx')
 
+
+
+
+
+
+
+print("Data are saved")
+
+print("End script abcd-1_participant-selection")
