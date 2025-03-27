@@ -26,7 +26,7 @@ data_base["dual_group"] = data_base["group"].apply(lambda x: "Group 3" if x == 3
 cut_offs = {'devhx_19a_p': 5, 'devhx_19b_p': 9, 'devhx_19c_p': 18, 'devhx_19d_p': 13}
 
 for var, cut_off in cut_offs.items():
-    data_base[f'diff_{var}'] = (data_base[var] - cut_off).clip(lower=0)  # Ne garde que les valeurs positives
+    data_base[f'diff_{var}'] = (data_base[var] - cut_off).clip(lower=0) 
 
 data_base["diff_tot_dd"] = data_base[['diff_devhx_19a_p', 'diff_devhx_19b_p', 'diff_devhx_19c_p', 'diff_devhx_19d_p']].sum(axis=1)
 
@@ -150,7 +150,7 @@ print(f"P-value : {p_val:.3f}")
 group_1 = dd_data[dd_data['group'] == 1]['diff_tot_dd']
 group_2 = dd_data[dd_data['group'] == 3]['diff_tot_dd']
 
-statistic, p_value = ttest_ind(group_1, group_2, equal_var=False)  # equal_var=False pour le test de Welch
+statistic, p_value = ttest_ind(group_1, group_2, equal_var=False)  
 
 print("T-test, Welch:")
 print(f"t-value: {statistic}")
