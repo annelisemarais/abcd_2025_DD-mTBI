@@ -16,7 +16,7 @@ from statsmodels.formula.api import ols
 
 
 ###Load data
-data = pd.read_excel('/Users/amarais/Documents/abcd/data/final_sample.xlsx', header=0)
+data = pd.read_excel('my-path/data/final_sample.xlsx', header=0)
 
 ###Definition of arguments used in the analysis
 
@@ -49,10 +49,10 @@ cbcl_var = [
 N_final = data_base.groupby(['group']).size()
 print('N final')
 print(N_final)
-N_final.to_excel('/Users/amarais/Documents/abcd/result/N_final.xlsx')
+N_final.to_excel('my-path/result/N_final.xlsx')
 
 descr = data_base.groupby("group")[cbcl_var].agg(['mean', 'std', 'min', 'max'])
-descr.to_excel("/Users/amarais/Documents/abcd/result/stats_cbcl_bygroup.xlsx")
+descr.to_excel("my-path/result/stats_cbcl_bygroup.xlsx")
 print(descr)
 
 
@@ -61,7 +61,7 @@ print(descr)
 #Proportion of DD severity
 month_over_bygroup = dd_data.groupby('group')[[f'diff_{var}' for var in cut_offs]].agg(['mean', 'std', 'min', 'max'])
 print(month_over_bygroup)
-month_over_bygroup.to_excel('/Users/amarais/Documents/abcd/result/month_over_bygroup.xlsx', index_label='Group')
+month_over_bygroup.to_excel('my-path/result/month_over_bygroup.xlsx', index_label='Group')
 
 N_sev_dd = data_base.groupby(['group', 'dd_severity']).size()
 total_population = N_sev_dd.sum()
@@ -76,7 +76,7 @@ severity_bygroup_dd = (
 )
 print('Severity of DD by group')
 print(severity_bygroup_dd)
-severity_bygroup_dd.to_excel('/Users/amarais/Documents/abcd/result/prop_severity_dd.xlsx')
+severity_bygroup_dd.to_excel('my-path/result/prop_severity_dd.xlsx')
 
 
 #Proportion of mTBI severity
@@ -94,7 +94,7 @@ severity_bygroup_mtbi = (
 
 print('Severity of mTBI by group')
 print(severity_bygroup_mtbi)
-severity_bygroup_mtbi.to_excel('/Users/amarais/Documents/abcd/result/prop_severity_mtbi.xlsx')
+severity_bygroup_mtbi.to_excel('my-path/result/prop_severity_mtbi.xlsx')
 
 
 
@@ -117,7 +117,7 @@ corr_df = pd.DataFrame(corr_results, columns=['Variable 1', 'Variable 2', 'Corr√
 
 print(corr_df)
 
-corr_df.to_excel('/Users/amarais/Documents/abcd/result/correlation.xlsx')
+corr_df.to_excel('my-path/result/correlation.xlsx')
 
 
 
@@ -188,7 +188,7 @@ for var in cbcl_var:
 results_df = pd.DataFrame(reg_results_dd).T
 print(results_df)
 
-results_df.to_excel('/Users/amarais/Documents/abcd/result/reg_dd_severity_bygroup.xlsx')
+results_df.to_excel('my-path/result/reg_dd_severity_bygroup.xlsx')
 
 
 
@@ -234,5 +234,5 @@ for var in cbcl_var:
 results_df = pd.DataFrame(reg_results_tbi).T
 print(results_df)
 
-results_df.to_excel('/Users/amarais/Documents/abcd/result/reg_tbi_severity_bygroup.xlsx')
+results_df.to_excel('my-path/result/reg_tbi_severity_bygroup.xlsx')
 
