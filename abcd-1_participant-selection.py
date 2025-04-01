@@ -17,15 +17,15 @@ import numpy as np
 ###DEMOGRAPHICS
 print('processing demographics data')
 
-all_demo = pd.read_excel('/Users/amarais/Documents/abcd/abcd_data/abcd_p_demo.xlsx', header=0)
+all_demo = pd.read_excel('my-path/abcd_data/abcd_p_demo.xlsx', header=0)
 
 
 # Filter data for variables 'demo_brthdat_v2', 'demo_sex_v2' et 'demo_prnt_ed_v2'
 all_demo_data = (
     all_demo
-    .dropna(subset=['demo_brthdat_v2', 'demo_sex_v2', 'demo_prnt_ed_v2'])  # Supprimer les lignes avec des NaN 
-    .drop_duplicates(subset=['src_subject_id'], keep='first')  # Garder la première occurrence par sujet
-    [['src_subject_id', 'demo_brthdat_v2', 'demo_sex_v2', 'demo_prnt_ed_v2', 'demo_prtnr_ed_v2']]  # Ne garder que les colonnes nécessaires
+    .dropna(subset=['demo_brthdat_v2', 'demo_sex_v2', 'demo_prnt_ed_v2'])  
+    .drop_duplicates(subset=['src_subject_id'], keep='first') 
+    [['src_subject_id', 'demo_brthdat_v2', 'demo_sex_v2', 'demo_prnt_ed_v2', 'demo_prtnr_ed_v2']] 
 )
 
 #drop children with unexpected data (intersexe, doesn't know, doesn't want to answer)
@@ -45,7 +45,7 @@ print('END processing demographics data')
 
 print('processing physical health data')
 
-ph = pd.read_excel('/Users/amarais/Documents/abcd/abcd_data/ph_p_dhx.xlsx', header=0)
+ph = pd.read_excel('my-path/abcd_data/ph_p_dhx.xlsx', header=0)
 
 
 ##Extract developmental milestones (dm) questions
@@ -53,13 +53,15 @@ ph = pd.read_excel('/Users/amarais/Documents/abcd/abcd_data/ph_p_dhx.xlsx', head
 dm = ph[ph['eventname'] == 'baseline_year_1_arm_1'][['src_subject_id', 'devhx_19a_p', 'devhx_19b_p', 'devhx_19c_p', 'devhx_19d_p']]
 
 # Drop children that did not complete the questions or miscompleted
-
+# Drop children that did not complete the questions 
 dm_var = ['devhx_19a_p', 'devhx_19b_p', 'devhx_19c_p', 'devhx_19d_p']
 dm[dm_var] = dm[dm_var].where(dm[dm_var] <= 72, np.nan) #
 dm = dm.dropna(subset=dm_var, how='all')
 dm_id = dm['src_subject_id'].unique()
 demo = demo[demo['src_subject_id'].isin(dm_id)]
 
+
+#add to my data
 demo_dm = demo.merge(dm, on='src_subject_id', how='inner')
 
 print('END processing physical health data')
@@ -68,7 +70,7 @@ print('END processing physical health data')
 
 print('processing TBI data')
 
-all_otbi = pd.read_excel('/Users/amarais/Documents/abcd/abcd_data/ph_p_otbi.xlsx', header=0)
+all_otbi = pd.read_excel('my-path/abcd_data/ph_p_otbi.xlsx', header=0)
 
 otbi = all_otbi[all_otbi['src_subject_id'].isin(demo_dm['src_subject_id'].unique())]
 
@@ -101,7 +103,7 @@ tbi_subjects = otbi_filtered.groupby('src_subject_id').apply(
         (group.loc[group['eventname'] != 'baseline_year_1_arm_1', tbi_columns].sum().sum() == 0)   # No other one elsewhere
     )
 )
-
+#Filter
 tbi_index = tbi_subjects[tbi_subjects].index  
 mtbi_control = otbi_filtered[~otbi_filtered['src_subject_id'].isin(tbi_index)]
 control = pd.DataFrame({'src_subject_id': mtbi_control['src_subject_id'].unique(), 'eventname':'baseline_year_1_arm_1', 'tbi_group':0, 'tbi_severity':0})
@@ -135,7 +137,7 @@ print(f"IDs of dropped subjects : {early_tbi}")
 print(f"Number of subs with a TBI before 18 month (90th perc) : {len(early_tbi)}")
 
 
-tbi.to_excel('/Users/amarais/Documents/abcd/verif/tbi.xlsx')
+tbi.to_excel('my-path/verif/tbi.xlsx')
 
 
 ## Drop children with 2 mTBI before baseline
@@ -147,20 +149,17 @@ total_tbi = mtbi[tbi_columns].sum(axis=1)
 multiple_yes = mtbi[total_tbi > 1]
 
 def sort_multiple_yes(row):
-    # Trouver les questions principales auxquelles le sujet a répondu "oui"
     questions_with_yes = [f"tbi_{i}" for i in range(1, 6) if row[f"tbi_{i}"] == 1]
 
     if len(questions_with_yes) > 1:
-        # Récupérer les réponses aux sous-questions b, c et d
         bcd_responses = [tuple(row[f"{q}{s}"] for s in "bcd") for q in questions_with_yes]
 
-        # Vérifier si toutes les réponses sont identiques (=> doublon) ou différentes (=> incohérent)
         if all(resp == bcd_responses[0] for resp in bcd_responses):
-            return "duplicate"  # Réponses dupliquées
+            return "duplicate" 
         else:
-            return "inconsistent"  # Réponses incohérentes
+            return "inconsistent"  
 
-    return "valid"  # Aucune anomalie
+    return "valid" 
 
 analysis_results = multiple_yes.apply(sort_multiple_yes, axis=1)
 
@@ -173,13 +172,14 @@ print(f"Subjects dropped due to inconsistent responses: {len(to_drop)}")
 print(f"Subjects with duplicated responses: {len(duplicates)}")
 
 
-mtbi.to_excel('/Users/amarais/Documents/abcd/verif/mtbi.xlsx')
+mtbi.to_excel('my-path/verif/mtbi.xlsx')
 
 print('END processing TBI data')
 
 
 ##Export useful data
 def extract_data(row):
+    ## CAUSE
     columns_with_1 = [col for col in tbi_columns if row[col] == 1]
     
     if columns_with_1:
@@ -187,8 +187,9 @@ def extract_data(row):
     else:
         cause = 'NaN'
 
-    b_col = f"tbi_{cause}b"  # Correction de la syntaxe pour récupérer b
-    c_col = f"tbi_{cause}c"  # Correction de la syntaxe pour récupérer c
+    ## SEVERITY
+    b_col = f"tbi_{cause}b"  
+    c_col = f"tbi_{cause}c"  
 
     if row[b_col] == 0 and row[c_col] == 0:
         severity = 'NaN'
@@ -201,10 +202,12 @@ def extract_data(row):
     else:
         severity = 'NaN'  
 
+    ## AGE
     age = row[age_columns].dropna()
     age_value = age.iloc[0] if not age.empty else None
 
     return cause, severity, age_value  
+
 
 
 mtbi_data = pd.DataFrame({
@@ -217,7 +220,7 @@ mtbi_data = pd.DataFrame({
     'tbi_age_y': mtbi.apply(lambda row: extract_data(row)[2], axis=1)
 })
 
-mtbi_data.to_excel('/Users/amarais/Documents/abcd/data/mtbi_r.xlsx')
+mtbi_data.to_excel('my-path/data/mtbi_r.xlsx')
 
 
 
@@ -233,7 +236,7 @@ demo_dm_otbi = demo_dm[demo_dm['src_subject_id'].isin(my_sub_otbi_id)]
 demo_dm_otbi = demo_dm_otbi.merge(my_sub_otbi, on='src_subject_id', how='left')
 
 
-demo_dm_otbi.to_excel('/Users/amarais/Documents/abcd/data/all_sub_r.xlsx')
+demo_dm_otbi.to_excel('my-path/data/all_sub_r.xlsx')
 
 ###PHYSICAL HEALTH 2 
 
@@ -255,13 +258,13 @@ results_90th = (
 for var in dm_var:
     results_90th[(f'90th_{var}', '90th_Percentile_Value')] = percentiles[var]
 
-results_90th.insert(0, 'Total_Subjects', group_totals)  # Insérer le total en première colonne
+results_90th.insert(0, 'Total_Subjects', group_totals)
 
 
 print("Résultats par groupe pour le 90e percentile :")
 print(results_90th)
 
-output_path = "/Users/amarais/Documents/abcd/result/proportion_90th.xlsx"
+output_path = "my-path/result/proportion_90th.xlsx"
 results_90th.to_excel(output_path, engine='openpyxl') 
 
 
@@ -294,7 +297,6 @@ demo_dm_otbi[['group', 'group_nom']] = demo_dm_otbi.apply(
 new_rows = []
 
 for index, row in demo_dm_otbi.iterrows():
-
     new_row_1 = row.copy()
     new_row_1['eventname'] = '2_year_follow_up_y_arm_1'
     new_rows.append(new_row_1)
@@ -310,7 +312,7 @@ abcd_sample = abcd_sample.sort_values(by='src_subject_id').reset_index(drop=True
 
 ##Add longitudinal data (age at follow-ups)
 
-longitudinal = pd.read_excel('/Users/amarais/Documents/abcd/abcd_data/abcd_y_lt.xlsx', header=0)
+longitudinal = pd.read_excel('my-path/abcd_data/abcd_y_lt.xlsx', header=0)
 
 abcd_sample = abcd_sample.merge(
     longitudinal[['src_subject_id', 'eventname', 'interview_age']], 
@@ -323,7 +325,7 @@ abcd_sample = abcd_sample.merge(
 
 print("Adding CBCL")
 
-cbcl = pd.read_excel('/Users/amarais/Documents/abcd/abcd_data/mh_p_cbcl.xlsx', header=0)
+cbcl = pd.read_excel('my-path/abcd_data/mh_p_cbcl.xlsx', header=0)
 abcd_sample = abcd_sample.merge(cbcl[['src_subject_id', 'eventname','cbcl_scr_dsm5_adhd_t','cbcl_scr_dsm5_anxdisord_t','cbcl_scr_dsm5_conduct_t','cbcl_scr_dsm5_depress_t','cbcl_scr_dsm5_opposit_t','cbcl_scr_syn_external_t','cbcl_scr_syn_internal_t']], on=['src_subject_id', 'eventname'], how='left')
 print(abcd_sample)
 
@@ -345,7 +347,7 @@ map_event = {
 }
 final_sample['event0'] = final_sample['eventname'].map(map_event)
 
-final_sample.to_excel('/Users/amarais/Documents/abcd/data/final_sample.xlsx')
+final_sample.to_excel('my-path/data/final_sample.xlsx')
 
 
 
