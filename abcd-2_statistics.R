@@ -13,7 +13,7 @@ library(openxlsx)
 
 
 
-data <- read_excel("/Users/amarais/Documents/abcd/data/final_sample.xlsx")
+data <- read_excel("my-path/data/final_sample.xlsx")
 
 data$demo_sex_v2 <- as.factor(data$demo_sex_v2)
 
@@ -86,7 +86,7 @@ analyze_variable <- function(var_name, data) {
   addWorksheet(wb, "Model Info")
   writeData(wb, "Model Info", model_info)
 
-  output_file <- paste0("/Users/amarais/Documents/abcd/result/stats/", var_name, "_stats.xlsx")
+  output_file <- paste0("my-path/result/stats/", var_name, "_stats.xlsx")
 
   saveWorkbook(wb, output_file, overwrite = TRUE)
 
