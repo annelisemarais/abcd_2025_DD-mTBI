@@ -1,4 +1,9 @@
 # abcd_2025_DD-mTBI
+
+## Licence
+This project is licended under AGPL-3.0. See LICENCE file for more information.
+
+
 script for the analysis of the abcd study data regarding an article on developmental delay (DD) and mild traumatic brain injury (mTBI)
 
 scripts must be run in the order defined by the author in order to get the same results
