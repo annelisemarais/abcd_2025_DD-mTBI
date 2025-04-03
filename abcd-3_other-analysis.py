@@ -1,3 +1,15 @@
+#Copyright (C) 2025 Anne-Lise Marais
+
+#This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; version 3.
+
+#This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+#If you have any question, please contact Fanny Dégeilh at fanny.degeilh@inserm.fr
+
+
+
+
+
 ## Property of Anne-Lise Marais, 2025 {maraisannelise98@gmail.com}
 
 ##This code is for descriptive, corraltion and exploratory analysis of the sample created from the first file
