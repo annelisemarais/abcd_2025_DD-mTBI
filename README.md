@@ -94,3 +94,9 @@ tzdata            2024.2
 tzlocal           5.2
 wcwidth           0.2.13
 
+Packages version in R
+
+lme4 1.1.36 ;
+lmerTest 3.1.3 ;
+readxl 1.4.3 ; 
+openxlsx 4.2.8
