@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-# Charger les données
-data = pd.read_excel('my-path/data/final_data.xlsx', header=0)
+
+data = pd.read_excel('/Users/amarais/Documents/abcd/data/final_data.xlsx', header=0)
 
 event_order = ["baseline_year_1_arm_1", "2_year_follow_up_y_arm_1", "4_year_follow_up_y_arm_1"]
 
@@ -49,7 +49,7 @@ for var_fitted in variables_fitted:
 
     plt.tight_layout()
     
-    output_path = f"my-path/result/figures/dd_{var_fitted}_plot.png"
+    output_path = f"/Users/amarais/Documents/abcd/result/figures/dd_{var_fitted}_plot.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     
     plt.show()
@@ -62,7 +62,7 @@ for var_fitted in variables_fitted:
         x='eventname', y=var_fitted, hue='tbi_group', data=data,
         dodge=True, order=event_order,
         linestyle='solid', errorbar=("ci",95),
-        palette=["green", "red"]  # Définition des couleurs
+        palette=["purple", "red"]  # Définition des couleurs
     )
 
     plt.xlabel("eventname")
@@ -75,7 +75,7 @@ for var_fitted in variables_fitted:
 
     plt.tight_layout()
 
-    output_path = f"my-path/result/figures/tbi_{var_fitted}_plot.png"
+    output_path = f"/Users/amarais/Documents/abcd/result/figures/tbi_{var_fitted}_plot.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
 
     plt.show()
@@ -107,7 +107,7 @@ for var_fitted in (variables_fitted):
 
     plt.tight_layout()
     
-    output_path = f"my-path/result/figures/dd_{var_fitted}_plot.png"
+    output_path = f"/Users/amarais/Documents/abcd/result/figures/dd_{var_fitted}_plot.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     
     plt.show()
@@ -119,7 +119,7 @@ for var_fitted in (variables_fitted):
     plt.figure(figsize = (6,4))
     
     sns.pointplot(x='eventname', y=var_fitted, hue='tbi_group', data=data, 
-                  dodge=True, order=event_order, palette=["green", "red"],
+                  dodge=True, order=event_order, palette=["purple", "red"],
                   linestyle='solid', errorbar=("ci",95))
     
     plt.xlabel("eventname")
@@ -132,7 +132,7 @@ for var_fitted in (variables_fitted):
 
     plt.tight_layout()
     
-    output_path = f"my-path/result/figures/tbi_{var_fitted}_plot.png"
+    output_path = f"/Users/amarais/Documents/abcd/result/figures/tbi_{var_fitted}_plot.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     
     plt.show()
